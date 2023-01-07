@@ -86,5 +86,13 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .alwaysRemember(true) // remember-me 기능이 활성화되지 않아도 항상 실행
                 .userDetailsService(userDetailsService) // 시스템에 있는 사용자를 처리하는 과정에 필요한 것
         ;
+        http
+                .sessionManagement()
+                .invalidSessionUrl("/invalid") // 세션이 유효하지 않을 때 이동할 페이지 // 체이닝 조심할 것
+                .maximumSessions(1) // 최대 허용 가능 세션 수, -1 : 무제한 로그인 세션 허용
+                .maxSessionsPreventsLogin(true) // 동시 로그인 차단함, false : 기존 세션 만료(default)
+                .expiredUrl("/expired") // 세션이 만료된 경우 이동할 페이지
+
+        ;
     }
 }
