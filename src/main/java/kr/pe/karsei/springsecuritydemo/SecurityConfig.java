@@ -5,6 +5,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -87,7 +88,19 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .userDetailsService(userDetailsService) // 시스템에 있는 사용자를 처리하는 과정에 필요한 것
         ;
         http
-                .sessionManagement()
+                .sessionManagement() // 세션 관리 기능이 동작함
+
+                .sessionFixation() // 세션 고정 보호
+                .changeSessionId() // 기본값. none, migrateSession, newSession
+
+                .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED) // 세션 정책
+                /*
+                ALWAYS - 항상 세션 생성
+                IF_REQUIRED - 필요 시 생성 (기본값)
+                NEVER - 생성하지 않지만 이미 존재하면 사용
+                STATELESS - 생성하지 않고 존재해도 사용하지 않음
+                 */
+
                 .invalidSessionUrl("/invalid") // 세션이 유효하지 않을 때 이동할 페이지 // 체이닝 조심할 것
                 .maximumSessions(1) // 최대 허용 가능 세션 수, -1 : 무제한 로그인 세션 허용
                 .maxSessionsPreventsLogin(true) // 동시 로그인 차단함, false : 기존 세션 만료(default)
