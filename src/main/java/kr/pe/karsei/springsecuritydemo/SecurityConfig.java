@@ -2,6 +2,7 @@ package kr.pe.karsei.springsecuritydemo;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
@@ -27,10 +28,43 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     private UserDetailsService userDetailsService;
 
     @Override
+    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+        auth.inMemoryAuthentication()
+                .withUser("user")
+                .password("{noop}1111") // 특정 패스워드 알고리즘 유형을 prefix 형태로 적어야 나중에 패스워드 일치 여부 확인 시 검증 시 도움이 됨. noop 은 평문으로 하라는 뜻
+                .roles("USER");
+        auth.inMemoryAuthentication()
+                .withUser("sys")
+                .password("{noop}1111")
+                .roles("SYS");
+        auth.inMemoryAuthentication()
+                .withUser("admin")
+                .password("{noop}1111")
+                .roles("ADMIN");
+    }
+
+    @Override
     protected void configure(HttpSecurity http) throws Exception {
+//        http
+//                .authorizeRequests()
+//                .anyRequest().authenticated()
+//        ;
         http
                 .authorizeRequests()
-                .anyRequest().authenticated()
+                        .antMatchers("/user").hasRole("USER")
+                        .antMatchers("/admin/pay").hasRole("ADMIN")
+                        .antMatchers("/admin/**").access("hasRole('ADMIN') or hasRole('SYS')")
+                        .anyRequest().authenticated()
+        ;
+        //http
+        //        .antMatcher("/shop/**") // 사용자의 요청이 여기에 설정된 자원 경로에 접근할 때만 아래의 기능이 작동한다. 다른 경로면 작동하지 않는다. 만약 생략하면 모든 경로를 대상으로 한다.
+        //        .authorizeRequests()
+        //        .antMatchers("/shop/login", "/shop/users/**").permitAll() // 동일한 정보가 있거나 포함되면 뒤에 있는 권한 정보에 따라 모든 인가 승인을 진행한다.
+        //        .antMatchers("/shop/mypage").hasRole("USER") // 해당 경로 요청은 USER 라는 역할을 가지고 있어야 접근이 가능하다.
+        //        .antMatchers("/shop/admin/pay").access("hasRole('ADMIN')")
+        //        .antMatchers("/shop/admin/**").access("hasRole('ADMIN') or hasRole('SYS')")
+        //        .anyRequest().authenticated()
+        // 주의할 점은 설정 시 구체적인 경로가 먼저 오고, 그것보다 큰 범위의 경로가 뒤에 오도록 해야 한다.
         ;
         http
                 .formLogin() // Form 로그인 인증 기능이 작동함
@@ -88,6 +122,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .userDetailsService(userDetailsService) // 시스템에 있는 사용자를 처리하는 과정에 필요한 것
         ;
         http
+                // 로그인 시 SessionManagementFilter -> session.expireNow() 로 이전 사용자 세션 만료(최대 세션 허용 개수가 초과되었을 경우)
+                // 이전 사용자가 요청 시 ConcurrentSessionFilter -> 위의 메서드로 세션만료 체크 후 true 면 logout 후 오류 페이지 응답
                 .sessionManagement() // 세션 관리 기능이 동작함
 
                 .sessionFixation() // 세션 고정 보호
@@ -105,7 +141,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .maximumSessions(1) // 최대 허용 가능 세션 수, -1 : 무제한 로그인 세션 허용
                 .maxSessionsPreventsLogin(true) // 동시 로그인 차단함, false : 기존 세션 만료(default)
                 .expiredUrl("/expired") // 세션이 만료된 경우 이동할 페이지
-
         ;
     }
 }
