@@ -2,6 +2,7 @@ package kr.pe.karsei.springsecuritydemo;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -10,10 +11,15 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.web.AuthenticationEntryPoint;
+import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.logout.LogoutHandler;
 import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
+import org.springframework.security.web.savedrequest.HttpSessionRequestCache;
+import org.springframework.security.web.savedrequest.RequestCache;
+import org.springframework.security.web.savedrequest.SavedRequest;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -36,11 +42,11 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         auth.inMemoryAuthentication()
                 .withUser("sys")
                 .password("{noop}1111")
-                .roles("SYS");
+                .roles("SYS", "USER");
         auth.inMemoryAuthentication()
                 .withUser("admin")
                 .password("{noop}1111")
-                .roles("ADMIN");
+                .roles("ADMIN", "SYS", "USER"); // 나중에 계층적으로 권한을 설정해줄 수 있긴 하지만 우선은 이렇게 직접 여러 개를 명시함으로써 모든 권한을 줄 수 있다.
     }
 
     @Override
@@ -51,6 +57,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 //        ;
         http
                 .authorizeRequests()
+                        .antMatchers("/login").permitAll() // 이거 안하면 인증을 받아야 하기 때문에 허용을 해줌
                         .antMatchers("/user").hasRole("USER")
                         .antMatchers("/admin/pay").hasRole("ADMIN")
                         .antMatchers("/admin/**").access("hasRole('ADMIN') or hasRole('SYS')")
@@ -78,7 +85,11 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                     @Override
                     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
                         System.out.println("authentication - " + authentication.getName());
-                        response.sendRedirect("/");
+                        RequestCache requestCache = new HttpSessionRequestCache();
+                        SavedRequest savedRequest = requestCache.getRequest(request, response); // 사용자가 가고자 했던 요청 정보
+                        String redirectUrl = savedRequest.getRedirectUrl();
+                        response.sendRedirect(redirectUrl); // 인증에 성공한 다음 바로 세션에 저장되어 있던 이전의 정보를 꺼내와서 이동하도록 함
+                        //response.sendRedirect("/");
                     }
                 }) // 로그인 성공 후 핸들러
                 .failureHandler(new AuthenticationFailureHandler() {
@@ -141,6 +152,21 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .maximumSessions(1) // 최대 허용 가능 세션 수, -1 : 무제한 로그인 세션 허용
                 .maxSessionsPreventsLogin(true) // 동시 로그인 차단함, false : 기존 세션 만료(default)
                 .expiredUrl("/expired") // 세션이 만료된 경우 이동할 페이지
+        ;
+        http
+                .exceptionHandling() // 예외 처리 기능이 작동함
+                .authenticationEntryPoint(new AuthenticationEntryPoint() { // 인증 실패 시 처리
+                    @Override
+                    public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException, ServletException {
+                        response.sendRedirect("/login");
+                    }
+                })
+                .accessDeniedHandler(new AccessDeniedHandler() { // 인가 실패 시 처리
+                    @Override
+                    public void handle(HttpServletRequest request, HttpServletResponse response, AccessDeniedException accessDeniedException) throws IOException, ServletException {
+                        response.sendRedirect("/denied");
+                    }
+                })
         ;
     }
 }
