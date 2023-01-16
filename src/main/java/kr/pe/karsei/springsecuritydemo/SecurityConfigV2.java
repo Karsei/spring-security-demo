@@ -9,7 +9,7 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 @Configuration
 @EnableWebSecurity
 @Order(0) // 여러 개가 있을 경우 @Order 를 사용해야 함. 0번째
-public class SecurityMultipleConfig extends WebSecurityConfigurerAdapter {
+public class SecurityConfigV2 extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http
@@ -25,7 +25,7 @@ public class SecurityMultipleConfig extends WebSecurityConfigurerAdapter {
 
 @Configuration
 @Order(1) // 1번째
-class SecurityMultipleConfig2 extends WebSecurityConfigurerAdapter {
+class SecurityConfigV2_1 extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http
