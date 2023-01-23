@@ -1,5 +1,6 @@
 package kr.pe.karsei.springsecuritydemo.config;
 
+import kr.pe.karsei.springsecuritydemo.domain.Roles;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,9 +17,9 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
         String password = passwordEncoder().encode("1111");
 
-        auth.inMemoryAuthentication().withUser("user").password(password).roles("USER");
-        auth.inMemoryAuthentication().withUser("manager").password(password).roles("MANAGER", "USER");
-        auth.inMemoryAuthentication().withUser("admin").password(password).roles("ADMIN", "USER", "MANAGER");
+        auth.inMemoryAuthentication().withUser("user").password(password).roles(Roles.USER.name());
+        auth.inMemoryAuthentication().withUser("manager").password(password).roles(Roles.MANAGER.name(), Roles.USER.name());
+        auth.inMemoryAuthentication().withUser("admin").password(password).roles(Roles.ADMIN.name(), Roles.USER.name(), Roles.MANAGER.name());
     }
 
     @Bean
@@ -31,9 +32,9 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
         http
                 .authorizeRequests()
                 .antMatchers("/", "/users").permitAll()
-                .antMatchers("/mypage").hasRole("USER")
-                .antMatchers("/messages").hasRole("MANAGER")
-                .antMatchers("/config").hasRole("ADMIN")
+                .antMatchers("/mypage").hasRole(Roles.USER.name())
+                .antMatchers("/messages").hasRole(Roles.MANAGER.name())
+                .antMatchers("/config").hasRole(Roles.ADMIN.name())
                 .anyRequest().authenticated()
                 .and()
                 .formLogin()
