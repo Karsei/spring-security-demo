@@ -1,6 +1,7 @@
 package kr.pe.karsei.springsecuritydemo.security.config;
 
 import kr.pe.karsei.springsecuritydemo.domain.Roles;
+import kr.pe.karsei.springsecuritydemo.security.handler.CustomAccessDeniedHandler;
 import kr.pe.karsei.springsecuritydemo.security.provider.CustomAuthenticationProvider;
 import kr.pe.karsei.springsecuritydemo.security.service.CustomUserDetailService;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +16,7 @@ import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 
@@ -49,24 +51,33 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
         return PasswordEncoderFactories.createDelegatingPasswordEncoder();
     }
 
+    public AccessDeniedHandler accessDeniedHandler() {
+        CustomAccessDeniedHandler accessDeniedHandler = new CustomAccessDeniedHandler();
+        accessDeniedHandler.setErrorPage("/denied");
+        return accessDeniedHandler;
+    }
+
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http
                 .authorizeRequests()
-                .antMatchers("/", "/users", "/login*").permitAll()
-                .antMatchers("/mypage").hasRole(Roles.USER.name())
-                .antMatchers("/messages").hasRole(Roles.MANAGER.name())
-                .antMatchers("/config").hasRole(Roles.ADMIN.name())
-                .anyRequest().authenticated()
+                        .antMatchers("/", "/users", "/login*").permitAll()
+                        .antMatchers("/mypage").hasRole(Roles.USER.name())
+                        .antMatchers("/messages").hasRole(Roles.MANAGER.name())
+                        .antMatchers("/config").hasRole(Roles.ADMIN.name())
+                        .anyRequest().authenticated()
+                .and()
+                .exceptionHandling()
+                        .accessDeniedHandler(accessDeniedHandler())
                 .and()
                 .formLogin()
-                .loginPage("/login")
-                .loginProcessingUrl("/login_proc")
-                .authenticationDetailsSource(authenticationDetailsSource)
-                .defaultSuccessUrl("/")
-                .successHandler(customAuthenticationSuccessHandler)
-                .failureHandler(customAuthenticationFailureHandler)
-                .permitAll()
+                        .loginPage("/login")
+                        .loginProcessingUrl("/login_proc")
+                        .defaultSuccessUrl("/")
+                        .authenticationDetailsSource(authenticationDetailsSource)
+                        .successHandler(customAuthenticationSuccessHandler)
+                        .failureHandler(customAuthenticationFailureHandler)
+                        .permitAll()
         ;
     }
 
