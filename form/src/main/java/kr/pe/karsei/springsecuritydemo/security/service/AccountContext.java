@@ -1,11 +1,13 @@
-package kr.pe.karsei.springsecuritydemo.service.impl;
+package kr.pe.karsei.springsecuritydemo.security.service;
 
 import kr.pe.karsei.springsecuritydemo.domain.Account;
+import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 
 import java.util.Collection;
 
+@Getter
 public class AccountContext extends User {
     private final Account account;
 

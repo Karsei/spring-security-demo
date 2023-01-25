@@ -1,4 +1,4 @@
-package kr.pe.karsei.springsecuritydemo.service.impl;
+package kr.pe.karsei.springsecuritydemo.security.service;
 
 import kr.pe.karsei.springsecuritydemo.domain.Account;
 import kr.pe.karsei.springsecuritydemo.repository.UserRepository;

@@ -1,12 +1,13 @@
-package kr.pe.karsei.springsecuritydemo.config;
+package kr.pe.karsei.springsecuritydemo.security.config;
 
 import kr.pe.karsei.springsecuritydemo.domain.Roles;
-import kr.pe.karsei.springsecuritydemo.provider.CustomAuthenticationProvider;
-import kr.pe.karsei.springsecuritydemo.service.impl.CustomUserDetailService;
+import kr.pe.karsei.springsecuritydemo.security.provider.CustomAuthenticationProvider;
+import kr.pe.karsei.springsecuritydemo.security.service.CustomUserDetailService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationDetailsSource;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -14,11 +15,14 @@ import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 
 @Configuration
 @RequiredArgsConstructor
 public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
+    private final AuthenticationDetailsSource authenticationDetailsSource;
     private final CustomUserDetailService userDetailsService;
+    private final AuthenticationSuccessHandler customAuthenticationSuccessHandler;
 
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
@@ -54,6 +58,12 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                 .anyRequest().authenticated()
                 .and()
                 .formLogin()
+                .loginPage("/login")
+                .loginProcessingUrl("/login_proc")
+                .authenticationDetailsSource(authenticationDetailsSource)
+                .defaultSuccessUrl("/")
+                .successHandler(customAuthenticationSuccessHandler)
+                .permitAll()
         ;
     }
 
