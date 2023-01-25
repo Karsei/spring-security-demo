@@ -1,12 +1,12 @@
 spring:
   datasource:
-    url: "jdbc:postgresql://localhost:5422/springboot"
-    username: postgres
-    password: pass
+    url: "jdbc:h2:~/test"
+    username: sa
+    password: ""
+    driver-class-name: org.h2.Driver
   jpa:
     hibernate:
       ddl-auto: create
-    database-platform: org.hibernate.dialect.PostgreSQLDialect
     properties:
       hibernate:
         format_sql: true
@@ -21,3 +21,5 @@ spring:
       enabled: true
     restart:
       enabled: true
+server:
+  port: 8081
