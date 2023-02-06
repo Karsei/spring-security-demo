@@ -20,7 +20,7 @@ public class SecurityResourceService {
 
     public LinkedHashMap<RequestMatcher, List<ConfigAttribute>> getResourceList() {
         LinkedHashMap<RequestMatcher, List<ConfigAttribute>> result = new LinkedHashMap<>();
-        List<Resources> resourceList = resourcesRepository.findAllResourcesBy();
+        List<Resources> resourceList = resourcesRepository.findAllResources();
 
         resourceList.forEach(re -> {
             List<ConfigAttribute> configAttributeList = new ArrayList<>();
